@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 # Modifications Copyright 2020 Paulhindemith
-# 
+#
 # The original source code can be referenced from the link below.
 # https://github.com/knative/serving/blob/9f64f866d633b5cf7ffc4e50e3bc327fd9a3a924/hack/boilerplate/add-boilerplate.sh
 # The change history can be obtained by looking at the differences from the
@@ -25,9 +25,9 @@
 USAGE=$(cat <<EOF
 Add boilerplate.<ext>.txt to all .<ext> files missing it in a directory.
 Usage: (from repository root)
-       ./hack/boilerplate/add-boilerplate.sh <ext> <DIR>
+        ./vendor/github.com/paulhindemith/dev-infra/hack/boilerplate/add-boilerplate.sh <ext> <DIR>
 Example: (from repository root)
-         ./hack/boilerplate/add-boilerplate.sh go cmd
+        ./vendor/github.com/paulhindemith/dev-infra/hack/boilerplate/add-boilerplate.sh go cmd
 EOF
 )
 
@@ -41,4 +41,4 @@ fi
 grep -r -L -P "Copyright \d+ Paulhindemith" $2  \
   | grep -P "\.$1\$" \
   | xargs -I {} sh -c \
-  "cat hack/boilerplate/boilerplate.$1.txt {} > /tmp/boilerplate && mv /tmp/boilerplate {}"
+  "cat $(dirname ${BASH_SOURCE[0]})/boilerplate.$1.txt {} > /tmp/boilerplate && mv /tmp/boilerplate {}"
