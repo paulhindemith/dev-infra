@@ -1,0 +1,12 @@
+required = [
+  "knative.dev/test-infra/scripts",
+]
+
+[prune]
+  go-tests = true
+  unused-packages = true
+  non-go = true
+
+[[prune.project]]
+  name = "knative.dev/test-infra"
+  non-go = false

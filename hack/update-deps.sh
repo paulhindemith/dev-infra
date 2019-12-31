@@ -13,8 +13,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# Modifications Copyright 2020 Paulhindemith
+#
+# The original source code can be referenced from the link below.
+# https://github.com/knative/serving/blob/0dd798db6f946906c4512311e40107e1c61a2a25/hack/update-deps.sh
+# The change history can be obtained by looking at the differences from the
+# following commit that added as the original source code.
+# 3134142ea564ebffd087ad5b4bf7b96e4e60191a
 
-readonly ROOT_DIR=$(dirname $0)/..
+readonly ROOT_DIR=$(git rev-parse --show-toplevel)
 source ${ROOT_DIR}/vendor/knative.dev/test-infra/scripts/library.sh
 
 set -o errexit
