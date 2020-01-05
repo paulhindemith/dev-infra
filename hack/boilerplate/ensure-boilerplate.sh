@@ -22,23 +22,37 @@
 # following commit that added as the original source code.
 # 550faea6bb43f0d7fa6a214dc29b5e9760bfe066
 
-USAGE=$(cat <<EOF
-Add boilerplate.<ext>.txt to all .<ext> files missing it in a directory.
-Usage: (from repository root)
-        ./vendor/github.com/paulhindemith/dev-infra/hack/boilerplate/add-boilerplate.sh <ext> <DIR>
-Example: (from repository root)
-        ./vendor/github.com/paulhindemith/dev-infra/hack/boilerplate/add-boilerplate.sh go cmd
-EOF
-)
+readonly ROOT_DIR=$(git rev-parse --show-toplevel)
 
-set -e
+set -o errexit
+set -o nounset
 
-if [[ -z $1 || -z $2 ]]; then
-  echo "${USAGE}"
+if [ -z "$1" ]; then
+  echo "** Internal error in ensure-boilerplate.sh, argument is not given."
   exit 1
 fi
 
-grep -r -L -P "Copyright \d+ Paulhindemith" $2  \
-  | grep -P "\.$1\$" \
-  | xargs -I {} sh -c \
-  "cat $(dirname ${BASH_SOURCE[0]})/boilerplate.$1.txt {} > /tmp/boilerplate && mv /tmp/boilerplate {}"
+function ensure_boilerplate() {
+  grep -r -L -P "Copyright \d+ $3" $2  \
+    | grep -P "\.$1\$" \
+    | xargs -I {} sh -c \
+    "cat $(dirname ${BASH_SOURCE[0]})/boilerplate.$1.txt {} > /tmp/boilerplate && mv /tmp/boilerplate {}"
+  if [[ $1 = "sh" ]]; then
+    chmod 755 $2
+  fi
+}
+
+function main() {
+  local target_files
+  target_files="$(find ${ROOT_DIR} -type f -name "*.sh" -o -name "*.go" | grep -v vendor)" || exit 1
+
+  for fi in $(echo $target_files); do
+    case "$fi" in
+      *.go ) ensure_boilerplate go ${fi} $1 ;;
+      *.sh ) ensure_boilerplate sh ${fi} $1 ;;
+      * ) exit 1 ;;
+    esac
+  done
+}
+
+main "$1"
