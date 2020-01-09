@@ -61,4 +61,4 @@ rm istio-${ISTIO_VERSION}-linux.tar.gz
 
 # Add in the `istio-system` namespace to reduce number of commands.
 patch istio-crds.yaml namespace.yaml.patch
-patch istio-minimal.yaml namespace.yaml.patch
+patch istio-local.yaml namespace.yaml.patch
