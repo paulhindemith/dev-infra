@@ -14,8 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+readonly ROOT_DIR=$(git rev-parse --show-toplevel)
+source ${ROOT_DIR}/vendor/knative.dev/test-infra/scripts/library.sh
+
 set -o errexit
 cd $(git rev-parse --show-toplevel)
-hack/boilerplate/ensure-boilerplate.sh Paulhindemith
-go fmt ./...
-go vet ./...
+
+echo ">> ./hack/boilerplate/ensure-boilerplate.sh Paulhindemith"
+./hack/boilerplate/ensure-boilerplate.sh Paulhindemith
+
+echo ">> ./hack/update-deps.sh"
+./hack/update-deps.sh
+
+echo "success"
