@@ -14,11 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -o errexit
+
 readonly ROOT_DIR=$(git rev-parse --show-toplevel)
 source ${ROOT_DIR}/vendor/knative.dev/test-infra/scripts/library.sh
 
-set -o errexit
-cd $(git rev-parse --show-toplevel)
+cd ${ROOT_DIR}
 
 echo ">> ./hack/boilerplate/ensure-boilerplate.sh Paulhindemith"
 ./hack/boilerplate/ensure-boilerplate.sh Paulhindemith
