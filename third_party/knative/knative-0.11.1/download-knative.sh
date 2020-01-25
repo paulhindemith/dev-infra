@@ -26,3 +26,6 @@ if [ $? != 0 ]; then
   echo "Failed to download knative package"
   exit 1
 fi
+
+# Add tls.
+patch serving.yaml serving.yaml.patch

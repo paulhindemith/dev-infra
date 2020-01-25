@@ -1,0 +1,15 @@
+1964c1964,1975
+< 
+---
+>     tls:
+>       httpsRedirect: true
+>   - hosts:
+>     - '*'
+>     port:
+>       name: https
+>       number: 443
+>       protocol: HTTPS
+>     tls:
+>       mode: SIMPLE
+>       serverCertificate: /etc/istio/ingressgateway-certs/tls.crt
+>       privateKey: /etc/istio/ingressgateway-certs/tls.key
