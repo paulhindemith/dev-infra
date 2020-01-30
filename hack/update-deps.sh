@@ -23,9 +23,6 @@
 # 3134142ea564ebffd087ad5b4bf7b96e4e60191a
 
 readonly ROOT_DIR=$(git rev-parse --show-toplevel)
-
-set -o errexit
-
 cd ${ROOT_DIR}
 
 # Ensure we have everything we need under vendor/
@@ -33,3 +30,5 @@ dep ensure $@
 
 rm -rf $(find vendor/ -name 'OWNERS')
 rm -rf $(find vendor/ -name '*_test.go')
+
+exit 0

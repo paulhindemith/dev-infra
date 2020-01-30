@@ -14,17 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -o errexit
-
+readonly STRICT_TEST
 readonly ROOT_DIR=$(git rev-parse --show-toplevel)
 source ${ROOT_DIR}/vendor/knative.dev/test-infra/scripts/library.sh
 
 cd ${ROOT_DIR}
 
 echo ">> ./hack/boilerplate/ensure-boilerplate.sh Paulhindemith"
-./hack/boilerplate/ensure-boilerplate.sh Paulhindemith
+./hack/boilerplate/ensure-boilerplate.sh Paulhindemith  \
+  || ( (( STRICT_TEST )) && abort "ensure-boilerplate.sh is aborted" )
 
 echo ">> ./hack/update-deps.sh"
-./hack/update-deps.sh
+./hack/update-deps.sh \
+  || ( (( STRICT_TEST )) && abort "update-deps.sh is aborted" )
 
 echo "success"

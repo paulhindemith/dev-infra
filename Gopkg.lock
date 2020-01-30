@@ -3,11 +3,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c41ef8736a012d015872fee1162c014992cfc9c744d87a7c74fd4a2e9e7c6a5b"
+  digest = "1:2cb4c0b755d93f2851e5ee6a1f0728a3c94c95ad3137b6470c8d787bef04130c"
   name = "knative.dev/test-infra"
   packages = ["scripts"]
   pruneopts = "UT"
-  revision = "ba482fa7480cd931a2f4acd47302aaacc8431c01"
+  revision = "ee08b33b3cf07d7cae113e0b66cd7bbcc8c6ca43"
 
 [solve-meta]
   analyzer-name = "dep"

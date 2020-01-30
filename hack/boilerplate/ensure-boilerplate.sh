@@ -33,27 +33,34 @@ if [ -z "$1" ]; then
 fi
 
 function ensure_boilerplate() {
-  grep -r -L -P "Copyright \d+ $3" $2  \
-    | grep -P "\.$1\$" \
-    | xargs -I {} sh -c \
-    "cat $(dirname ${BASH_SOURCE[0]})/boilerplate.$1.txt {} > /tmp/boilerplate && mv /tmp/boilerplate {}"
+  local changed=0
+  local target=$(grep -r -L -P "Copyright \d+ $3" $2 | grep -P "\.$1\$")
+  if [[ -n ${target} ]]; then
+    changed=1
+    echo $target | xargs -I {} sh -c \
+      "cat $(dirname ${BASH_SOURCE[0]})/boilerplate.$1.txt {} > /tmp/boilerplate && mv /tmp/boilerplate {}"
+  fi
+
   if [[ $1 = "sh" ]]; then
     chmod 755 $2
   fi
+  return $changed
 }
 
 function main() {
+  local changed=0
   local target_files
   target_files="$(find ${ROOT_DIR} -type f -name "*.sh" -o -name "*.go" -o -name "*.yaml" | grep -v "/vendor/")" || exit 1
 
   for fi in $(echo $target_files); do
     case "$fi" in
-      *.go ) ensure_boilerplate go ${fi} $1 ;;
-      *.sh ) ensure_boilerplate sh ${fi} $1 ;;
-      *.yaml ) ensure_boilerplate yaml ${fi} $1 ;;
-      * ) exit 1 ;;
+      *.go ) ensure_boilerplate go ${fi} $1 || changed=1 ;;
+      *.sh ) ensure_boilerplate sh ${fi} $1 || changed=1;;
+      *.yaml ) ensure_boilerplate yaml ${fi} $1 || changed=1;;
+      * ) echo "Unknown file extension." && exit 1 ;;
     esac
   done
+  return $changed
 }
 
-main "$1"
+main "$1" || exit 1
