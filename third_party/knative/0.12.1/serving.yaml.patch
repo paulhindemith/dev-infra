@@ -1,0 +1,12 @@
+1934a1935,1945
+>     tls:
+>       httpsRedirect: true
+>   - hosts:
+>     - '*'
+>     port:
+>       name: https
+>       number: 443
+>       protocol: HTTPS
+>     tls:
+>       mode: SIMPLE
+>       credentialName: "istio-ingressgateway-secret"
