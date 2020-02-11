@@ -21,6 +21,5 @@ import (
 )
 
 func main() {
-	fmt.Println("This is a dummy go file so `go dep` can be used with github.com/paulhindemith/dev-infra/third_vendor/knative/knative-0.11.1")
 	fmt.Println("This file can be removed once the repo contains real, useful go code in the root dir")
 }
