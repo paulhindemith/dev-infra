@@ -21,15 +21,19 @@ import (
   "strings"
 )
 
+var rrd string
+
 func RepoRootDir() (string, error) {
 	var (
 		out []byte
 		err error
 	)
 
-	if out, err = exec.Command("git", "rev-parse", "--show-toplevel").CombinedOutput(); err != nil {
+	if rrd != "" {
+		return rrd, nil
+	} else if out, err = exec.Command("git", "rev-parse", "--show-toplevel").CombinedOutput(); err != nil {
 		return "", err
 	}
-
-	return strings.TrimSpace(string(out)), nil
+	rrd = strings.TrimSpace(string(out))
+	return rrd, nil
 }

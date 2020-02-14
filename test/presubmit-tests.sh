@@ -24,8 +24,6 @@ echo ">> ./hack/boilerplate/ensure-boilerplate.sh Paulhindemith"
 ./hack/boilerplate/ensure-boilerplate.sh Paulhindemith  \
   || ( (( STRICT_TEST )) && abort "ensure-boilerplate.sh is aborted" )
 
-echo ">> ./hack/update-deps.sh"
-./hack/update-deps.sh \
-  || ( (( STRICT_TEST )) && abort "update-deps.sh is aborted" )
+echo ">> go test ./..."
 
 echo "success"
