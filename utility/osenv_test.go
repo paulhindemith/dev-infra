@@ -22,10 +22,13 @@ import (
   "strings"
 )
 
-func TestLinux(t *testing.T) {
+func getOS() string {
   out, _ := exec.Command("uname").CombinedOutput()
-  os := strings.TrimSpace(string(out))
-  switch os {
+  return strings.TrimSpace(string(out))
+}
+
+func TestLinux(t *testing.T) {
+  switch getOS() {
   case "Linux":
     if !IsLinux() {
       t.Fatal("must true")
@@ -39,10 +42,18 @@ func TestLinux(t *testing.T) {
   }
 }
 
+func TestNotLinuxSkipWhenShort(t *testing.T) {
+  if testing.Short() {
+    t.Fatal("You can not run short test.")
+  }
+  switch getOS() {
+  case "Linux":
+    NotLinuxSkipWhenShort(t)
+  }
+}
+
 func TestDarwin(t *testing.T) {
-  out, _ := exec.Command("uname").CombinedOutput()
-  os := strings.TrimSpace(string(out))
-  switch os {
+  switch getOS() {
   case "Linux":
     if IsDarwin() {
       t.Fatal("must false")
@@ -53,5 +64,15 @@ func TestDarwin(t *testing.T) {
     }
   default:
     t.Fatal("unknown os")
+  }
+}
+
+func TestNotDarwinSkipWhenShort(t *testing.T) {
+  if testing.Short() {
+    t.Fatal("You can not run short test.")
+  }
+  switch getOS() {
+  case "Darwin":
+    NotDarwinSkipWhenShort(t)
   }
 }

@@ -17,6 +17,8 @@ limitations under the License.
 package utility
 
 import (
+  "fmt"
+  "testing"
   "os/exec"
   "strings"
 )
@@ -37,4 +39,22 @@ func IsDarwin() (bool) {
     goos = strings.TrimSpace(string(out))
   }
   return goos == "Darwin"
+}
+
+func NotLinuxSkipWhenShort(t *testing.T) {
+  if !IsLinux() {
+		if testing.Short() {
+      t.Skip(fmt.Sprintf("skipping %s in not Linux", t.Name()))
+    }
+		t.Fatal("Can run in only Linux")
+	}
+}
+
+func NotDarwinSkipWhenShort(t *testing.T) {
+  if !IsDarwin() {
+		if testing.Short() {
+        t.Skip(fmt.Sprintf("skipping %s in not Darwin", t.Name()))
+    }
+		t.Fatal("Can run in only Darwin")
+	}
 }
