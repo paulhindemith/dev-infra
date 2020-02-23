@@ -17,87 +17,82 @@ limitations under the License.
 package composite
 
 import (
-  "context"
   "testing"
 )
 
+type  mappingASimulateUp struct {}
+type  mappingASimulateDown struct {}
+type  mappingAUp struct {}
+type  mappingADown struct {}
+type  mappingBSimulateUp struct {}
+type  mappingBSimulateDown struct {}
+type  mappingBUp struct {}
+type  mappingBDown struct {}
+
 type mappingA struct {}
-type mappingASimulateUpKey struct{}
-type mappingASimulateDownKey struct{}
-type mappingAUpKey struct{}
-type mappingADownKey struct{}
 func (a *mappingA) Name() string {return "A"}
-func (a *mappingA) SimulateUp(c context.Context) (context.Context, error) {return context.WithValue(c, mappingASimulateUpKey{}, true), nil}
-func (a *mappingA) SimulateDown(c context.Context) (context.Context, error) {return context.WithValue(c, mappingASimulateDownKey{}, true), nil}
-func (a *mappingA) Up(c context.Context) (context.Context, error) {return context.WithValue(c, mappingAUpKey{}, true), nil}
-func (a *mappingA) Down(c context.Context) (context.Context, error) {return context.WithValue(c, mappingADownKey{}, true), nil}
+func (a *mappingA) SimulateUp(e Element) (Element, error) {e[mappingASimulateUp{}] = true; return e, nil}
+func (a *mappingA) SimulateDown(e Element) (Element, error) {e[mappingASimulateDown{}] = true; return e, nil}
+func (a *mappingA) Up(e Element) (Element, error) {e[mappingAUp{}] = true; return e, nil}
+func (a *mappingA) Down(e Element) (Element, error) {e[mappingADown{}] = true; return e, nil}
 type mappingB struct {}
-type mappingBSimulateUpKey struct{}
-type mappingBSimulateDownKey struct{}
-type mappingBUpKey struct{}
-type mappingBDownKey struct{}
 func (b *mappingB) Name() string {return "B"}
-func (b *mappingB) SimulateUp(c context.Context) (context.Context, error) {return context.WithValue(c, mappingBSimulateUpKey{}, true), nil}
-func (b *mappingB) SimulateDown(c context.Context) (context.Context, error) {return context.WithValue(c, mappingBSimulateDownKey{}, true), nil}
-func (b *mappingB) Up(c context.Context) (context.Context, error) {return context.WithValue(c, mappingBUpKey{}, true), nil}
-func (b *mappingB) Down(c context.Context) (context.Context, error) {
-  return context.WithValue(c, mappingBDownKey{}, true), nil}
+func (b *mappingB) SimulateUp(e Element) (Element, error) {e[mappingBSimulateUp{}] = true; return e, nil}
+func (b *mappingB) SimulateDown(e Element) (Element, error) {e[mappingBSimulateDown{}] = true; return e, nil}
+func (b *mappingB) Up(e Element) (Element, error) {e[mappingBUp{}] = true; return e, nil}
+func (b *mappingB) Down(e Element) (Element, error) {e[mappingBDown{}] = true; return e, nil}
 type mappingReady struct {}
 func (r *mappingReady) Name() string {return "Ready"}
-func (r *mappingReady) SimulateUp(c context.Context) (context.Context, error) {return ready(c), nil}
-func (r *mappingReady) SimulateDown(c context.Context) (context.Context, error) {return ready(c), nil}
-func (r *mappingReady) Up(c context.Context) (context.Context, error) {return ready(c), nil}
-func (r *mappingReady) Down(c context.Context) (context.Context, error) {return ready(c), nil}
-func ready(c context.Context) context.Context {
-  c = context.WithValue(c, mappingASimulateUpKey{}, false)
-  c = context.WithValue(c, mappingASimulateDownKey{}, false)
-  c = context.WithValue(c, mappingAUpKey{}, false)
-  c = context.WithValue(c, mappingADownKey{}, false)
-  c = context.WithValue(c, mappingBSimulateUpKey{}, false)
-  c = context.WithValue(c, mappingBSimulateDownKey{}, false)
-  c = context.WithValue(c, mappingBUpKey{}, false)
-  c = context.WithValue(c, mappingBDownKey{}, false)
-  return c
+func (r *mappingReady) SimulateUp(e Element) (Element, error) {return ready(e), nil}
+func (r *mappingReady) SimulateDown(e Element) (Element, error) {return ready(e), nil}
+func (r *mappingReady) Up(e Element) (Element, error) {return ready(e), nil}
+func (r *mappingReady) Down(e Element) (Element, error) {return ready(e), nil}
+func ready(e Element) Element {
+  e[mappingASimulateUp{}] = false
+  e[mappingASimulateDown{}] = false
+  e[mappingAUp{}] = false
+  e[mappingADown{}] = false
+  e[mappingBSimulateUp{}] = false
+  e[mappingBSimulateDown{}] = false
+  e[mappingBUp{}] = false
+  e[mappingBDown{}] = false
+  return e
 }
 func TestComposite(t *testing.T) {
   r, a, b := &mappingReady{}, &mappingA{}, &mappingB{}
   var (
-    ctx context.Context
     comp = Composite(r, a, b)
   )
 
   comp.SimulateAt("A")
-  ctx = comp.GetContext()
-  if !ctx.Value(mappingASimulateUpKey{}).(bool) {
-    t.Fatal("mappingASimulateUpKey should be true")
-  } else if ctx.Value(mappingBSimulateUpKey{}).(bool) {
-    t.Fatal("mappingBSimulateUpKey should be false")
+  e := comp.GetElement()
+  if !e[mappingASimulateUp{}].(bool) {
+    t.Fatal("mappingASimulateUp should be true")
+  } else if e[mappingBSimulateUp{}].(bool) {
+    t.Fatal("mappingBSimulateUp should be false")
   }
   if comp.GetCurrentStep() != "A" {
     t.Fatal("CurrentStep should be A")
   }
   comp.SimulateAt("A")
-  ctx = comp.GetContext()
-  if !ctx.Value(mappingASimulateUpKey{}).(bool) {
-    t.Fatal("mappingASimulateUpKey should be true")
+  if !e[mappingASimulateUp{}].(bool) {
+    t.Fatal("mappingASimulateUp should be true")
   }
   if comp.GetCurrentStep() != "A" {
     t.Fatal("CurrentStep should be A")
   }
 
   comp.SimulateAt("B")
-  ctx = comp.GetContext()
-  if !ctx.Value(mappingBSimulateUpKey{}).(bool) {
-    t.Fatal("mappingBSimulateUpKey should be true")
+  if !e[mappingBSimulateUp{}].(bool) {
+    t.Fatal("mappingBSimulateUp should be true")
   }
   if comp.GetCurrentStep() != "B" {
     t.Fatal("CurrentStep should be B")
   }
 
   comp.SimulateAt("A")
-  ctx = comp.GetContext()
-  if !ctx.Value(mappingBSimulateDownKey{}).(bool) {
-    t.Fatal("mappingBSimulateDownKey should be true")
+  if !e[mappingBSimulateDown{}].(bool) {
+    t.Fatal("mappingBSimulateDown should be true")
   }
   if comp.GetCurrentStep() != "A" {
     t.Fatal("CurrentStep should be A")
@@ -105,30 +100,27 @@ func TestComposite(t *testing.T) {
 
 
   comp.ReproduceAt("A")
-  ctx = comp.GetContext()
-  if ctx.Value(mappingBUpKey{}).(bool) {
-    t.Fatal("mappingBUpKey should be false")
+  if e[mappingBUp{}].(bool) {
+    t.Fatal("mappingBUp should be false")
   }
-  if ctx.Value(mappingBDownKey{}).(bool) {
-    t.Fatal("mappingBDownKey should be false")
+  if e[mappingBDown{}].(bool) {
+    t.Fatal("mappingBDown should be false")
   }
   if comp.GetCurrentStep() != "A" {
     t.Fatal("CurrentStep should be A")
   }
 
   comp.ReproduceAt("B")
-  ctx = comp.GetContext()
-  if !ctx.Value(mappingBUpKey{}).(bool) {
-    t.Fatal("mappingBUpKey should be true")
+  if !e[mappingBUp{}].(bool) {
+    t.Fatal("mappingBUp should be true")
   }
   if comp.GetCurrentStep() != "B" {
     t.Fatal("CurrentStep should be B")
   }
 
   comp.ReproduceAt("A")
-  ctx = comp.GetContext()
-  if !ctx.Value(mappingBDownKey{}).(bool) {
-    t.Fatal("mappingBDownKey should be true")
+  if !e[mappingBDown{}].(bool) {
+    t.Fatal("mappingBDown should be true")
   }
   if comp.GetCurrentStep() != "A" {
     t.Fatal("CurrentStep should be A")

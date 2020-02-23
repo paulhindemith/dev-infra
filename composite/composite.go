@@ -18,7 +18,6 @@ package composite
 
 import (
   "fmt"
-  "context"
 )
 /*
                      __--------__
@@ -39,14 +38,15 @@ Step 0              /             \
                      ¯¯--------¯¯
 */
 
-type mapping = func(context.Context) (context.Context, error)
+type Element = map[interface{}]interface{}
+type mapping = func(Element) (Element, error)
 
-type Interface interface {
+type Mappings interface {
   Name() string
-  SimulateUp(context.Context) (context.Context, error)
-  SimulateDown(context.Context) (context.Context, error)
-  Up(context.Context) (context.Context, error)
-  Down(context.Context) (context.Context, error)
+  SimulateUp(Element) (Element, error)
+  SimulateDown(Element) (Element, error)
+  Up(Element) (Element, error)
+  Down(Element) (Element, error)
 }
 
 type composite struct {
@@ -56,10 +56,10 @@ type composite struct {
   downTo map[int]mapping
   stepNames map[string]int
   currentStep int
-  context context.Context
+  element Element
 }
 
-func Composite(ss ...Interface) *composite {
+func Composite(ss ...Mappings) *composite {
   b := &composite{
     stepNames: map[string]int{"0": 0},
     simulateUpTo: map[int]mapping{},
@@ -67,7 +67,7 @@ func Composite(ss ...Interface) *composite {
     upTo: map[int]mapping{},
     downTo: map[int]mapping{},
     currentStep: 0,
-    context: context.TODO(),
+    element: Element{},
   }
   for i, s := range ss {
     b.simulateUpTo[i+1] = s.SimulateUp
@@ -78,8 +78,8 @@ func Composite(ss ...Interface) *composite {
   }
   return b
 }
-func (c *composite) GetContext() context.Context {
-  return c.context
+func (c *composite) GetElement() Element {
+  return c.element
 }
 func (c *composite) GetCurrentStep() string {
   for name, i := range c.stepNames {
@@ -127,14 +127,15 @@ func (c *composite) ReproduceAt(name string) error {
 
 func (c *composite) simulateUp(s int) error {
   var (
-    ctx = c.context
+    e = c.element
     err error
   )
   for i:=c.currentStep+1; i<=s; i++ {
-    if ctx, err = c.simulateUpTo[i](ctx); err != nil {
+    f := c.simulateUpTo[i]
+    if e, err = f(e); err != nil {
       return err
     }
-    c.context = ctx
+    c.element = e
     c.currentStep = i
   }
   return nil
@@ -142,14 +143,15 @@ func (c *composite) simulateUp(s int) error {
 
 func (c *composite) simulateDown(s int) error {
   var (
-    ctx = c.context
+    e = c.element
     err error
   )
   for i:=c.currentStep-1; i>=s; i-- {
-    if ctx, err = c.simulateDownTo[i](ctx); err != nil {
+    f := c.simulateDownTo[i]
+    if e, err = f(e); err != nil {
       return err
     }
-    c.context = ctx
+    c.element = e
     c.currentStep = i
   }
   return nil
@@ -157,14 +159,15 @@ func (c *composite) simulateDown(s int) error {
 
 func (c *composite) up(s int) error {
   var (
-    ctx = c.context
+    e = c.element
     err error
   )
   for i:=c.currentStep+1; i<=s; i++ {
-    if ctx, err = c.upTo[i](ctx); err != nil {
+    f := c.upTo[i]
+    if e, err = f(e); err != nil {
       return err
     }
-    c.context = ctx
+    c.element = e
     c.currentStep = i
   }
   return nil
@@ -172,14 +175,15 @@ func (c *composite) up(s int) error {
 
 func (c *composite) down(s int) error {
   var (
-    ctx = c.context
+    e = c.element
     err error
   )
   for i:=c.currentStep-1; i>=s; i-- {
-    if ctx, err = c.downTo[i](ctx); err != nil {
+    f := c.downTo[i]
+    if e, err = f(e); err != nil {
       return err
     }
-    c.context = ctx
+    c.element = e
     c.currentStep = i
   }
   return nil
