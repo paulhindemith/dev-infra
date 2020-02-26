@@ -59,7 +59,14 @@ type composite struct {
   element Element
 }
 
-func Composite(ss ...Mappings) *composite {
+type Interface interface {
+  GetElement() Element
+  GetCurrentStep() string
+  SimulateAt(name string) error
+  ReproduceAt(name string) error
+}
+
+func Composite(ss ...Mappings) Interface {
   b := &composite{
     stepNames: map[string]int{"0": 0},
     simulateUpTo: map[int]mapping{},
