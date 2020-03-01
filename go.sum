@@ -1,2 +1,5 @@
+github.com/google/go-cmp v0.4.0 h1:xsAVV57WRhGj6kEIi8ReJzQlHHqcBYCElAvkovg3B/4=
+github.com/google/go-cmp v0.4.0/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
+golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 knative.dev/test-infra v0.0.0-20200129221128-ee08b33b3cf0 h1:zDyvH3iyljIF07Y3ZYyltqonW+GrliaE2fdqMBVwtmw=
 knative.dev/test-infra v0.0.0-20200129221128-ee08b33b3cf0/go.mod h1:xcdUkMJrLlBswIZqL5zCuBFOC22WIPMQoVX1L35i0vQ=
