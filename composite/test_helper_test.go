@@ -79,7 +79,6 @@ func TestDiff(t *testing.T) {
       name: "zap logger",
       exp: map[interface{}]interface{}{"string": logger.Sugar()},
       act: map[interface{}]interface{}{"string": logger.Sugar()},
-      wantErr: true,
     },
   }
 
@@ -91,11 +90,11 @@ func TestDiff(t *testing.T) {
       e := map[interface{}]interface{}{}
       e_s[struct{}{}] = tc.exp
       e[struct{}{}] = tc.act
-      if err := Diff(e_s, e); err != nil {
-        if !tc.wantErr {
-          t.Fatal(err)
-        }
-      }
+			if err := Diff(e_s, e); err != nil && !tc.wantErr {
+				t.Fatal(err)
+			} else if err == nil && tc.wantErr {
+				t.Fatal("Coud not catch error")
+			}
     })
   }
 }
@@ -103,16 +102,16 @@ func TestDiff(t *testing.T) {
 type mapping1 struct {}
 func (a *mapping1) Name() string {return "mapping1"}
 func (a *mapping1) SimulateUp(e Element) (Element, error) {e[struct{}{}] = true; return e, nil}
-func (a *mapping1) SimulateDown(e Element) (Element, error) {e[struct{}{}] = true; return e, nil}
+func (a *mapping1) SimulateDown(e Element) (Element, error) {e[struct{}{}] = false; return e, nil}
 func (a *mapping1) Up(e Element) (Element, error) {e[struct{}{}] = true; return e, nil}
-func (a *mapping1) Down(e Element) (Element, error) {e[struct{}{}] = true; return e, nil}
+func (a *mapping1) Down(e Element) (Element, error) {e[struct{}{}] = false; return e, nil}
 
 type mapping2 struct {}
 func (a *mapping2) Name() string {return "mapping2"}
-func (a *mapping2) SimulateUp(e Element) (Element, error) {e[struct{}{}] = true; return e, nil}
-func (a *mapping2) SimulateDown(e Element) (Element, error) {e[struct{}{}] = false; return e, nil}
-func (a *mapping2) Up(e Element) (Element, error) {e[struct{}{}] = true; return e, nil}
-func (a *mapping2) Down(e Element) (Element, error) {e[struct{}{}] = false; return e, nil}
+func (a *mapping2) SimulateUp(e Element) (Element, error) {e[struct{}{}] = "a"; return e, nil}
+func (a *mapping2) SimulateDown(e Element) (Element, error) {e[struct{}{}] = "a"; return e, nil}
+func (a *mapping2) Up(e Element) (Element, error) {e[struct{}{}] = ""; return e, nil}
+func (a *mapping2) Down(e Element) (Element, error) {e[struct{}{}] = "a"; return e, nil}
 
 func TestTest(t *testing.T) {
 	var testCases = []struct {
@@ -136,10 +135,10 @@ func TestTest(t *testing.T) {
 			var (
 				comp = Composite(tc.mappings...)
 			)
-			if err := Test(comp); err != nil {
-				if !tc.wantErr {
-          t.Fatal(err)
-        }
+			if err := Test(comp); err != nil && !tc.wantErr {
+				t.Fatal(err)
+			} else if err == nil && tc.wantErr {
+				t.Fatal("Coud not catch error")
 			}
     })
   }

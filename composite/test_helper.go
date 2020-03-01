@@ -75,34 +75,45 @@ func Test(untyped Interface) error {
   if comp, ok = untyped.(*composite); !ok {
     return errors.New("composite type is wrong.")
   }
-
-  for i := 1; i < len(comp.simulateUpTo)+1; i++ {
+  last := len(comp.simulateUpTo)
+  for i := 1; i < last+1; i++ {
     f_s := comp.simulateUpTo[i]
-    f := comp.upTo[i]
     if e_s, err = f_s(e_s); err != nil {
       return err
     }
+    if i != last {
+      if e, err = f_s(e); err != nil {
+        return err
+      }
+      continue
+    }
+    f := comp.upTo[last]
     if e, err = f(e); err != nil {
       return err
     }
     if err = Diff(e_s, e); err != nil {
       return err
     }
-    e = e_s
   }
-  for i := len(comp.simulateDownTo)-1; i >= 0; i-- {
+
+  for i := last-1; i >= 0; i-- {
     f_s := comp.simulateDownTo[i]
-    f := comp.downTo[i]
     if e_s, err = f_s(e_s); err != nil {
       return err
     }
+    if i != last-1 {
+      if e, err = f_s(e); err != nil {
+        return err
+      }
+      continue
+    }
+    f := comp.downTo[last-1]
     if e, err = f(e); err != nil {
       return err
     }
     if err = Diff(e_s, e); err != nil {
       return err
     }
-    e = e_s
   }
   return nil
 }
