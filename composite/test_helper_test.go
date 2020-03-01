@@ -18,9 +18,19 @@ package composite
 
 import (
 	"testing"
+	"time"
 
 	"go.uber.org/zap"
 )
+
+type fake struct {
+	Name string
+	Hoge string
+}
+type act struct {
+	Name string
+	Hoge string
+}
 
 func TestDiff(t *testing.T) {
 	logger, _ := zap.NewProduction()
@@ -55,14 +65,14 @@ func TestDiff(t *testing.T) {
     },
     {
       name: "different slice",
-      exp: []struct{Name string}{{Name: "hoge"}, {Name: "fuga"}},
-      act: []struct{Name string}{{Name: "fuga"}},
+      exp: []struct{Name string}{{Name: "foo"}, {Name: "bar"}},
+      act: []struct{Name string}{{Name: "bar"}},
       wantErr: true,
     },
     {
       name: "same slice",
-      exp: []struct{Name string}{{Name: "hoge"}, {Name: "fuga"}},
-      act: []struct{Name string}{{Name: "fuga"}, {Name: "hoge"}},
+      exp: []struct{Name string}{{Name: "foo"}, {Name: "bar"}},
+      act: []struct{Name string}{{Name: "bar"}, {Name: "foo"}},
     },
     {
       name: "same function",
@@ -80,9 +90,37 @@ func TestDiff(t *testing.T) {
       exp: map[interface{}]interface{}{"string": logger.Sugar()},
       act: map[interface{}]interface{}{"string": logger.Sugar()},
     },
+		{
+      name: "fake struct1",
+      exp: &fake{Name: "foo"},
+      act: &act{Hoge: "bar"},
+    },
+		{
+      name: "fake struct2",
+      exp: &fake{Name: "foo"},
+      act: &act{Hoge: "bar", Name: ""},
+    },
+		{
+      name: "empty fake struct",
+      exp: &fake{Name: "foo"},
+      act: nil,
+			wantErr: true,
+    },
+		{
+      name: "time",
+      exp: time.Now(),
+      act: time.Now().Add(-time.Hour),
+    },
+		{
+      name: "time",
+      exp: time.Now(),
+      act: time.Time{},
+			wantErr: true,
+    },
   }
-
-	IgnoreUnexportedTypes = append(IgnoreUnexportedTypes, zap.SugaredLogger{})
+	RegardSameStructUnlessEitherZero(&fake{}, &act{})
+	RegardSameStructUnlessEitherZero(time.Time{}, time.Time{})
+	IgnoreUnexportedTypes(zap.SugaredLogger{})
 
   for _, tc := range testCases {
     t.Run(tc.name, func (t *testing.T) {

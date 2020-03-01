@@ -25,40 +25,80 @@ import (
   "github.com/google/go-cmp/cmp/cmpopts"
 )
 
-var IgnoreUnexportedTypes []interface{}
+var (
+  ignoreUnexportedTypes []interface{}
+  alwaysEqual = cmp.Comparer(func(_, _ interface{}) bool { return true })
+  sameStructUnlessEitherZero = map[reflect.Type]reflect.Type{}
+)
 
-var alwaysEqual = cmp.Comparer(func(_, _ interface{}) bool { return true })
-
-var opt = cmp.FilterValues(func(x, y interface{}) bool {
-    vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
-    if !vx.IsValid() || !vy.IsValid() {
-      return false
-    }
-    switch vx.Kind() {
-    case reflect.Map:
-      return false
-    case reflect.Slice:
-      return false
-    case reflect.Ptr:
-      return false
-    case reflect.Struct:
-      return false
-    }
-    if vx.Type() != vy.Type() {
-      return false
-    }
-    if vx.Kind() == reflect.Func {
-      return x != nil && y != nil
-    }
-    if x != y {
-      zero := reflect.Zero(vx.Type()).Interface()
-      return zero != vx.Interface() && zero != vy.Interface()
-    }
-    return true
+var regardSameStructUnlessEitherZeroOpt = cmp.FilterValues(func(x, y interface{}) bool {
+  vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
+  if !vx.IsValid() || !vy.IsValid() {
+    return false
+  }
+  if vx.Kind() != reflect.Struct && vx.Kind() != reflect.Ptr && vx.Kind() != reflect.Interface {
+    return false
+  }
+  var (
+    yType reflect.Type
+    ok bool
+  )
+  if yType, ok = sameStructUnlessEitherZero[vx.Type()]; !ok {
+    return false
+  }
+  if yType != vy.Type() {
+    return false
+  }
+  vxZero, vyZero := reflect.Zero(vx.Type()).Interface(), reflect.Zero(vy.Type()).Interface()
+  if vxZero == x {
+    return  vyZero == y
+  }
+  return vyZero != y
 }, alwaysEqual)
 
+var regardSameValueUnlessEitherZeroOpt = cmp.FilterValues(func(x, y interface{}) bool {
+  vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
+  if !vx.IsValid() || !vy.IsValid() {
+    return false
+  }
+  switch vx.Kind() {
+  case reflect.Map:
+    return false
+  case reflect.Slice:
+    return false
+  case reflect.Ptr:
+    return false
+  case reflect.Struct:
+    return false
+  }
+  if vx.Type() != vy.Type() {
+    return false
+  }
+  if vx.Kind() == reflect.Func {
+    return x != nil && y != nil
+  }
+  if x != y {
+    zero := reflect.Zero(vx.Type()).Interface()
+    return zero != vx.Interface() && zero != vy.Interface()
+  }
+  return true
+}, alwaysEqual)
+
+func IgnoreUnexportedTypes(i ...interface{}) {
+  ignoreUnexportedTypes = append(ignoreUnexportedTypes, i...)
+}
+
+func RegardSameStructUnlessEitherZero(x interface{}, y interface{}) {
+  vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
+  sameStructUnlessEitherZero[vx.Type()] = vy.Type()
+  sameStructUnlessEitherZero[vy.Type()] = vx.Type()
+}
+
 func Diff(exp, act map[interface{}]interface{}) error {
-  if diff := cmp.Diff(exp, act, opt, cmpopts.IgnoreUnexported(IgnoreUnexportedTypes...)); diff != "" {
+  if diff := cmp.Diff(exp, act,
+    regardSameValueUnlessEitherZeroOpt,
+    regardSameStructUnlessEitherZeroOpt,
+    cmpopts.IgnoreUnexported(ignoreUnexportedTypes...)); diff != "" {
     return fmt.Errorf("mismatch (-want +got):\n%s", diff)
   }
   return nil
