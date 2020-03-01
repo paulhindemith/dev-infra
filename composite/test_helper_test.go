@@ -18,9 +18,13 @@ package composite
 
 import (
 	"testing"
+
+	"go.uber.org/zap"
 )
 
 func TestDiff(t *testing.T) {
+	logger, _ := zap.NewProduction()
+
   var testCases = []struct {
     name string
     exp interface{}
@@ -65,13 +69,21 @@ func TestDiff(t *testing.T) {
       exp: func()error{return nil},
       act: func()error{return nil},
     },
-    {
+		{
       name: "empty function",
       exp: func()error{return nil},
       act: nil,
       wantErr: true,
     },
+		{
+      name: "zap logger",
+      exp: map[interface{}]interface{}{"string": logger.Sugar()},
+      act: map[interface{}]interface{}{"string": logger.Sugar()},
+      wantErr: true,
+    },
   }
+
+	IgnoreUnexportedTypes = append(IgnoreUnexportedTypes, zap.SugaredLogger{})
 
   for _, tc := range testCases {
     t.Run(tc.name, func (t *testing.T) {

@@ -22,7 +22,10 @@ import (
   "errors"
 
   "github.com/google/go-cmp/cmp"
+  "github.com/google/go-cmp/cmp/cmpopts"
 )
+
+var IgnoreUnexportedTypes []interface{}
 
 var alwaysEqual = cmp.Comparer(func(_, _ interface{}) bool { return true })
 
@@ -55,7 +58,7 @@ var opt = cmp.FilterValues(func(x, y interface{}) bool {
 }, alwaysEqual)
 
 func Diff(exp, act map[interface{}]interface{}) error {
-  if diff := cmp.Diff(exp, act, opt); diff != "" {
+  if diff := cmp.Diff(exp, act, opt, cmpopts.IgnoreUnexported(IgnoreUnexportedTypes...)); diff != "" {
     return fmt.Errorf("mismatch (-want +got):\n%s", diff)
   }
   return nil
