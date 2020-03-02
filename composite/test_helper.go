@@ -26,12 +26,14 @@ import (
 )
 
 var (
+  ignoreTypes []interface{}
   ignoreUnexportedTypes []interface{}
   alwaysEqual = cmp.Comparer(func(_, _ interface{}) bool { return true })
-  sameStructUnlessEitherZero = map[reflect.Type]reflect.Type{}
+  identicalTypesUnlessEitherIsZero = map[reflect.Type]reflect.Type{}
+  DebugOpt cmp.Option // to debug. If not enought opts are found, it must be implemented formally.
 )
 
-var regardSameStructUnlessEitherZeroOpt = cmp.FilterValues(func(x, y interface{}) bool {
+var regardAsIdenticalTypesUnlessEitherIsZeroOpt = cmp.FilterValues(func(x, y interface{}) bool {
   vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
   if !vx.IsValid() || !vy.IsValid() {
     return false
@@ -43,7 +45,7 @@ var regardSameStructUnlessEitherZeroOpt = cmp.FilterValues(func(x, y interface{}
     yType reflect.Type
     ok bool
   )
-  if yType, ok = sameStructUnlessEitherZero[vx.Type()]; !ok {
+  if yType, ok = identicalTypesUnlessEitherIsZero[vx.Type()]; !ok {
     return false
   }
   if yType != vy.Type() {
@@ -56,7 +58,7 @@ var regardSameStructUnlessEitherZeroOpt = cmp.FilterValues(func(x, y interface{}
   return vyZero != y
 }, alwaysEqual)
 
-var regardSameValueUnlessEitherZeroOpt = cmp.FilterValues(func(x, y interface{}) bool {
+var regardAsIdenticalValueUnlessEitherZeroOpt = cmp.FilterValues(func(x, y interface{}) bool {
   vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
   if !vx.IsValid() || !vy.IsValid() {
     return false
@@ -88,17 +90,23 @@ func IgnoreUnexportedTypes(i ...interface{}) {
   ignoreUnexportedTypes = append(ignoreUnexportedTypes, i...)
 }
 
-func RegardSameStructUnlessEitherZero(x interface{}, y interface{}) {
+func IgnoreTypes(i ...interface{}) {
+  ignoreTypes = append(ignoreTypes, i...)
+}
+
+func RegardAsIdenticalTypesUnlessEitherIsZero(x interface{}, y interface{}) {
   vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
-  sameStructUnlessEitherZero[vx.Type()] = vy.Type()
-  sameStructUnlessEitherZero[vy.Type()] = vx.Type()
+  identicalTypesUnlessEitherIsZero[vx.Type()] = vy.Type()
+  identicalTypesUnlessEitherIsZero[vy.Type()] = vx.Type()
 }
 
 func Diff(exp, act map[interface{}]interface{}) error {
   if diff := cmp.Diff(exp, act,
-    regardSameValueUnlessEitherZeroOpt,
-    regardSameStructUnlessEitherZeroOpt,
-    cmpopts.IgnoreUnexported(ignoreUnexportedTypes...)); diff != "" {
+    regardAsIdenticalValueUnlessEitherZeroOpt,
+    regardAsIdenticalTypesUnlessEitherIsZeroOpt,
+    cmpopts.IgnoreUnexported(ignoreUnexportedTypes...),
+    cmpopts.IgnoreTypes(ignoreTypes...),
+    DebugOpt); diff != "" {
     return fmt.Errorf("mismatch (-want +got):\n%s", diff)
   }
   return nil
@@ -129,10 +137,10 @@ func Test(untyped Interface) error {
     }
     f := comp.upTo[last]
     if e, err = f(e); err != nil {
-      return err
+      return fmt.Errorf("Cought error as calling `Up` script: %v", err)
     }
     if err = Diff(e_s, e); err != nil {
-      return err
+      return fmt.Errorf("Cought error as calling `Up` script:\n%v", err)
     }
   }
 
@@ -149,10 +157,10 @@ func Test(untyped Interface) error {
     }
     f := comp.downTo[last-1]
     if e, err = f(e); err != nil {
-      return err
+      return fmt.Errorf("Cought error as calling `Down` script: %v", err)
     }
     if err = Diff(e_s, e); err != nil {
-      return err
+      return fmt.Errorf("Cought error as calling `Down` script:\n%v", err)
     }
   }
   return nil

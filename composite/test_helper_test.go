@@ -23,13 +23,19 @@ import (
 	"go.uber.org/zap"
 )
 
+type foo struct {
+	Name string
+}
 type fake struct {
 	Name string
-	Hoge string
+	Foo string
 }
 type act struct {
 	Name string
-	Hoge string
+	Foo string
+}
+type ignoreType struct {
+	Name string
 }
 
 func TestDiff(t *testing.T) {
@@ -63,11 +69,16 @@ func TestDiff(t *testing.T) {
       exp: struct{Name string}{Name: "localhost"},
       act: struct{Name string}{Name: "google.com"},
     },
-    {
+		{
       name: "different slice",
+      exp: []foo{{Name: "foo"}, {Name: "bar"}},
+      act: []foo{{Name: "bar"}},
+			wantErr: true,
+    },
+		{
+      name: "different slice with struct will pass because ignoretype works",
       exp: []struct{Name string}{{Name: "foo"}, {Name: "bar"}},
       act: []struct{Name string}{{Name: "bar"}},
-      wantErr: true,
     },
     {
       name: "same slice",
@@ -93,12 +104,12 @@ func TestDiff(t *testing.T) {
 		{
       name: "fake struct1",
       exp: &fake{Name: "foo"},
-      act: &act{Hoge: "bar"},
+      act: &act{Foo: "bar"},
     },
 		{
       name: "fake struct2",
       exp: &fake{Name: "foo"},
-      act: &act{Hoge: "bar", Name: ""},
+      act: &act{Foo: "bar", Name: ""},
     },
 		{
       name: "empty fake struct",
@@ -117,10 +128,16 @@ func TestDiff(t *testing.T) {
       act: time.Time{},
 			wantErr: true,
     },
+		{
+      name: "ignore types",
+      exp: ignoreType{},
+      act: ignoreType{Name: "hoge"},
+    },
   }
-	RegardSameStructUnlessEitherZero(&fake{}, &act{})
-	RegardSameStructUnlessEitherZero(time.Time{}, time.Time{})
+	RegardAsIdenticalTypesUnlessEitherIsZero(&fake{}, &act{})
+	RegardAsIdenticalTypesUnlessEitherIsZero(time.Time{}, time.Time{})
 	IgnoreUnexportedTypes(zap.SugaredLogger{})
+	IgnoreTypes(ignoreType{})
 
   for _, tc := range testCases {
     t.Run(tc.name, func (t *testing.T) {
