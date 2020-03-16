@@ -20,30 +20,66 @@ import (
   "fmt"
   "net/http"
   "encoding/json"
+  "path"
+  "strconv"
 )
 
-func Serve(comp Interface) error {
+func keys(m map[string]int) []string {
+    ks := make([]string, len(m), len(m))
+    for k, v := range m {
+        ks[v] = k
+    }
+    return ks
+}
+
+func Server(comp Interface) *http.Server {
   mux := http.NewServeMux()
-  mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-    q := r.URL.Query()
-    var (
-      script string
-      scriptType string
-      err error
-    )
-    for k, v := range q {
-      if k == "name" {
-        script = v[0]
-      }
-      if k == "type" {
-        scriptType = v[0]
+  mux.HandleFunc("/api/scripts", func(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set( "Access-Control-Allow-Origin", "*")
+    bytes, err := json.Marshal(keys(comp.(*composite).stepNames))
+    if err != nil {
+      w.WriteHeader(http.StatusInternalServerError)
+      fmt.Fprintf(w, "JSON marshal error: %v", err)
+      return
+    }
+    w.WriteHeader(http.StatusOK)
+    fmt.Fprintf(w, string(bytes))
+  })
+
+  mux.HandleFunc("/api/simulate/", handleFunc(comp))
+  mux.HandleFunc("/api/reproduce/", handleFunc(comp))
+  s := &http.Server{
+    Addr: "127.0.0.1:8003",
+    Handler: mux,
+  }
+  return s
+}
+
+func handleFunc(comp Interface) func(w http.ResponseWriter, r *http.Request) {
+  return func(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set( "Access-Control-Allow-Origin", "*")
+    var err error
+    var stepId int
+    if stepId, err = strconv.Atoi(path.Base(r.URL.Path)); err != nil {
+      w.WriteHeader(http.StatusInternalServerError)
+      fmt.Fprintf(w, "Could not strconv: %v", err)
+    }
+    var stepName string
+    for k, v := range comp.(*composite).stepNames {
+      if v == stepId {
+        stepName = k
       }
     }
-    switch scriptType {
-    case "simulate":
-      err = comp.SimulateAt(script)
-    case "reproduce":
-      err = comp.ReproduceAt(script)
+    if stepName == "" {
+      w.WriteHeader(http.StatusNotFound)
+      fmt.Fprintf(w, "step is not found.")
+    }
+
+    switch path.Dir(r.URL.Path) {
+    case "/api/simulate":
+      err = comp.SimulateAt(stepName)
+    case "/api/reproduce":
+      err = comp.ReproduceAt(stepName)
     default:
       w.WriteHeader(http.StatusNotFound)
       fmt.Fprintf(w, "script is not found.")
@@ -66,6 +102,5 @@ func Serve(comp Interface) error {
     }
     w.WriteHeader(http.StatusOK)
     fmt.Fprintf(w, string(bytes))
-  })
-  return http.ListenAndServe("127.0.0.1:8003", mux)
+  }
 }
