@@ -36,3 +36,4 @@ fi
 
 # Add tls.
 patch serving.yaml serving.yaml.patch
+patch monitoring-metrics-prometheus.yaml monitoring-metrics-prometheus.yaml.patch
