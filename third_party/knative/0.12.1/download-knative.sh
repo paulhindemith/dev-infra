@@ -18,7 +18,7 @@
 KNATIVE_VERSION=0.12.1
 # Contains core, hpa, istio
 SERVING_DOWNLOAD_URL=https://github.com/knative/serving/releases/download/v${KNATIVE_VERSION}/serving.yaml
-
+PROMETHEUS_DOWNLOAD_URL=https://github.com/knative/serving/releases/download/v${KNATIVE_VERSION}/monitoring-metrics-prometheus.yaml
 cd $(dirname $0)
 
 wget --no-check-certificate $SERVING_DOWNLOAD_URL
@@ -26,6 +26,13 @@ if [ $? != 0 ]; then
   echo "Failed to download knative package"
   exit 1
 fi
+
+wget --no-check-certificate $PROMETHEUS_DOWNLOAD_URL
+if [ $? != 0 ]; then
+  echo "Failed to download knative package"
+  exit 1
+fi
+
 
 # Add tls.
 patch serving.yaml serving.yaml.patch
